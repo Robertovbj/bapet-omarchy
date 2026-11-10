@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "bapet.desktop-pets",
+  "name": "Desktop Pets",
+  "version": "1.0.0",
+  "author": "local",
+  "license": "MIT",
+  "description": "Ícone na barra para o BApet (Blue Archive Desktop Pet): inicia o app e mostra o menu dele no estilo do Omarchy.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Desktop Pets",
+    "description": "Inicia o BApet e dá acesso ao menu de pets (adicionar, pausar, esconder, sair)",
+    "category": "Apps",
+    "allowMultiple": false,
+    "defaultSection": "tray"
+  }
+}

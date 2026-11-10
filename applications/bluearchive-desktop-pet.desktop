@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Blue Archive Desktop Pet
+Comment=Animated Blue Archive students on your desktop
+Exec=@BIN_DIR@/BlueArchiveDesktopPet
+Icon=bluearchive-desktop-pet
+Terminal=false
+Categories=Game;Amusement;
+StartupNotify=false
