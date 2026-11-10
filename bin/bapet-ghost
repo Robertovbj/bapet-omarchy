@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Alterna os pets do BApet entre:
-#   ghost       — cliques atravessam a janela inteira do pet (padrão)
-#   interactive — dá para arrastar, clicar e abrir o menu do pet
-# Uso: bapet-ghost [toggle|on|off|status]
+# Switches BApet's pets between two modes:
+#   ghost        clicks go through the whole pet window (default)
+#   interactive  you can drag a pet, click it and open its menu
+# Usage: bapet-ghost [toggle|on|off|status]
 set -euo pipefail
 STATE="${XDG_RUNTIME_DIR:-/tmp}/bapet-mode"
 mode=$(cat "$STATE" 2>/dev/null || echo ghost)
@@ -12,7 +12,7 @@ case "${1:-toggle}" in
   on) want=ghost ;;
   off) want=interactive ;;
   toggle) [ "$mode" = ghost ] && want=interactive || want=ghost ;;
-  *) echo "uso: bapet-ghost [toggle|on|off|status]" >&2; exit 2 ;;
+  *) echo "usage: bapet-ghost [toggle|on|off|status]" >&2; exit 2 ;;
 esac
 
 [ "$want" = interactive ] && sign="+" || sign="-"
@@ -23,7 +23,7 @@ hyprctl clients -j | jq -r '.[] | select(.class == "BlueArchiveDesktopPet" and (
 echo "$want" > "$STATE"
 
 if [ "${BAPET_QUIET:-0}" != 1 ]; then
-  [ "$want" = ghost ] && msg="Pets atravessáveis: cliques passam direto" || msg="Pets interativos: arraste ou clique neles"
+  [ "$want" = ghost ] && msg="Clicks now go through your pets" || msg="You can drag and click your pets"
   notify-send -a "Desktop Pets" -t 2000 "$msg" || true
 fi
 echo "$want"

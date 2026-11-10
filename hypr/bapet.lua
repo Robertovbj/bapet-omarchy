@@ -1,8 +1,8 @@
--- BApet (Blue Archive Desktop Pet) — https://github.com/kagdakj/BApet
--- Os pets são janelas XWayland sem moldura que o app move sozinho. Aqui elas
--- viram overlays: flutuam, aparecem em todos os workspaces, sem decoração,
--- sem animação do Hyprland e sem roubar foco ao abrir. Diálogos do app
--- (Add Pet, Settings) não casam com o título e continuam janelas normais.
+-- BApet (Blue Archive Desktop Pet): https://github.com/kagdakj/BApet
+-- Pets are frameless XWayland windows that the app moves around itself. These
+-- rules make them overlays: floating, pinned to every workspace, no borders,
+-- shadows, blur or Hyprland animations, and no focus stealing when they appear.
+-- The app's dialogs (Add Pet, Settings) have other titles, so they stay normal windows.
 local pet = { class = "^BlueArchiveDesktopPet$", title = "^Desktop Pet( — .*)?$", xwayland = true }
 
 o.window(pet, {
@@ -17,12 +17,12 @@ o.window(pet, {
   no_initial_focus = true,
 })
 
--- Modo fantasma: o Hyprland não respeita o recorte de clique (X11 SHAPE) que
--- o app aplica, então a janela inteira do pet pega cliques, inclusive a parte
--- transparente. Por padrão os pets deixam todos os cliques passarem; com a tag
--- "bapet-touch" dá para arrastar e clicar neles. `bapet-ghost` (SUPER+ALT+P ou
--- menu da barra) alterna o modo.
+-- Ghost mode. The app limits its clickable area with X11 SHAPE, but Hyprland
+-- ignores that, so the whole pet window would catch clicks, transparent parts
+-- included. By default every click goes through the pets. The "bapet-touch" tag
+-- lets you drag and click them. `bapet-ghost` (SUPER+ALT+P or the bar menu)
+-- switches between the two.
 o.window(pet, { no_focus = true })
 o.window({ class = "^BlueArchiveDesktopPet$", tag = "bapet-touch" }, { no_focus = false })
 
-o.bind("SUPER + ALT + P", "Desktop pets: arrastar/atravessar", "bapet-ghost toggle")
+o.bind("SUPER + ALT + P", "Desktop pets: drag or click through", "bapet-ghost toggle")

@@ -1,12 +1,12 @@
-"""Lançador do BApet com ajustes locais aplicados em memória.
+"""BApet launcher that applies local tweaks in memory.
 
-Nenhum arquivo do clone do BApet é alterado, então `git pull` continua limpo.
-Cada ajuste é independente: se uma versão nova do BApet mudar o ponto que ele
-toca, o ajuste é pulado com um aviso no log e o app abre normalmente.
+No file in the BApet clone is changed, so `git pull` stays clean. Each tweak
+stands alone: if a new BApet version changes something a tweak relies on, that
+tweak is skipped with a warning and the app still opens.
 
-Ajustes:
-- Ângulo da câmera: -180° a 180° (o original vai de -10° a 45°). Passando de ±90° o pet fica de cabeça para baixo.
-- Espessura do contorno: a partir de 0.1 px, em passos de 0.1 (o original começa em 0.5).
+Tweaks:
+- Camera angle: -180° to 180° (upstream allows -10° to 45°). Past ±90° the pet is upside down.
+- Outline width: down to 0.1 px, in 0.1 steps (upstream stops at 0.5).
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ def _clamp(value: float, lo: float, hi: float) -> float:
 
 
 def _patch_sanitize() -> None:
-    """Settings.sanitize() limita pitch e contorno; reaplica com os limites novos."""
+    """Settings.sanitize() clamps the angle and outline; clamp them again with the new limits."""
     from bapet.config import Settings
 
     original = Settings.sanitize
@@ -44,11 +44,11 @@ def _patch_sanitize() -> None:
 
 
 def _patch_frame() -> None:
-    """Frame.fit() só acerta a altura da janela com ângulo entre 0° e 90°; fora
-    disso corta o pet. Dentro dessa faixa usa o código original. Fora dela,
-    enquadra pelos extremos reais da projeção: o modelo ocupa as alturas
-    min(y_min, 0)..y_max e as profundidades -radius..radius, e a câmera leva
-    (y, z) para y*cos + z*sin na tela."""
+    """Frame.fit() assumes the angle is between 0° and 90°. Outside that range the
+    window comes out the wrong height and clips the pet. Inside it, keep upstream's
+    code. Outside it, frame the model by the real extremes of its projection: the
+    model spans heights min(y_min, 0)..y_max and depths -radius..radius, and the
+    camera maps (y, z) to y*cos + z*sin on screen."""
     from bapet.renderer import Frame
 
     original = Frame.fit
@@ -61,8 +61,8 @@ def _patch_frame() -> None:
         heights = (y_max * c, min(y_min, 0.0) * c)
         top = max(heights) + radius * abs(s)
         bottom = min(heights) - radius * abs(s)
-        # Largura e âncora horizontal não dependem do ângulo: vêm de um fit
-        # dentro da faixa, e só a altura e a âncora vertical são trocadas.
+        # Width and horizontal anchor don't depend on the angle: take them from an
+        # in-range fit and replace only the height and vertical anchor.
         frame = original(radius, y_min, y_max, ppu, 0.0, margin)
         height = max(int(math.ceil((top - bottom) * ppu)) + 2 * margin, 8)
         return dataclasses.replace(frame, height=height, anchor_y=margin + top * ppu, pitch=pitch)
@@ -71,8 +71,8 @@ def _patch_frame() -> None:
 
 
 def _patch_settings_dialog() -> None:
-    """Os campos da tela de Settings travam os valores; abre os limites e recoloca
-    o valor salvo, que o campo já tinha cortado ao ser criado."""
+    """The Settings fields enforce the old limits. Widen them and set the saved
+    value again, since the field already clamped it when it was created."""
     from bapet.dialogs import SettingsDialog
 
     original = SettingsDialog.__init__
@@ -96,8 +96,8 @@ def apply() -> None:
     for patch in (_patch_sanitize, _patch_frame, _patch_settings_dialog):
         try:
             patch()
-        except Exception as exc:  # noqa: BLE001 - um ajuste quebrado não pode impedir o app de abrir
-            log.warning("ajuste %s não aplicado (BApet mudou?): %s", patch.__name__, exc)
+        except Exception as exc:  # noqa: BLE001 - a broken tweak must not keep the app from opening
+            log.warning("skipped tweak %s (did BApet change?): %s", patch.__name__, exc)
 
 
 def main() -> int:

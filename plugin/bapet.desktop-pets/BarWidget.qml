@@ -5,11 +5,11 @@ import Quickshell.Services.SystemTray
 import qs.Commons
 import qs.Ui
 
-// Ícone do BApet na barra. Não fala com o app por nenhum canal próprio: lê o
-// item de bandeja (StatusNotifierItem) que o BApet já publica e desenha o menu
-// dele aqui. Se o app ganhar itens novos no menu, eles aparecem sozinhos.
-//   clique esquerdo: inicia o app ou, se já está rodando, abre "Add Pet"
-//   clique direito:  menu do app (pausar, esconder, settings, sair...)
+// BApet's icon in the bar. It has no channel of its own to the app: it reads the
+// tray item (StatusNotifierItem) BApet already publishes and draws that menu here,
+// so new items in the app's menu show up without changes.
+//   left click:  start the app, or open "Add Pet" if it is running
+//   right click: the app's menu (pause, hide, settings, quit...)
 BarWidget {
   id: root
   moduleName: "bapet.desktop-pets"
@@ -31,7 +31,7 @@ BarWidget {
   property bool starting: false
   onRunningChanged: if (running) starting = false
 
-  // Desiste do "iniciando" se o app não registrar a bandeja (ex.: erro de OpenGL)
+  // Stop showing "Starting…" if the app never registers its tray item (an OpenGL error, say)
   Timer {
     id: startTimeout
     interval: 20000
@@ -45,8 +45,8 @@ BarWidget {
     Quickshell.execDetached([launcher])
   }
 
-  // Modo dos pets, escrito por ~/.local/bin/bapet-ghost: "ghost" (cliques
-  // atravessam) ou "interactive" (dá para arrastar)
+  // Pet mode, written by ~/.local/bin/bapet-ghost: "ghost" (clicks go
+  // through) or "interactive" (pets can be dragged)
   readonly property string ghostScript: Quickshell.env("HOME") + "/.local/bin/bapet-ghost"
   property bool interactive: false
 
@@ -104,7 +104,7 @@ BarWidget {
       anchors.fill: parent
       spacing: 0
 
-      // App desligado: só a opção de iniciar
+      // App not running: only the start option
       MenuRow {
         visible: !root.running
         label: root.starting ? strings.t("menu.starting") : strings.t("menu.start")

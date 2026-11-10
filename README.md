@@ -28,28 +28,33 @@ models.
 
 Before editing `hyprland.lua` or `shell.json`, the installer saves a `.bak.<timestamp>` copy.
 
-Optional variables: `BAPET_REF=v1.0.0` pins a BApet version, `BAPET_REPO` points to a fork, and
-`BAPET_HOME` changes the install folder.
+You can pin a BApet version, use a fork or change the install folder:
+
+```sh
+BAPET_REF=v1.0.0 BAPET_REPO=https://github.com/you/BApet BAPET_HOME=~/apps/bapet ./install.sh
+```
 
 ## Usage
 
-- **Open:** from the launcher, from the paw icon in the bar's tray drawer (left click), or with
-  `BlueArchiveDesktopPet --add "Hina"`.
-- **Menu:** right-click the paw in the bar. It shows the app's own menu (add, pause, hide, settings, quit)
-  plus a **Drag pets** option.
-- **`SUPER + ALT + P`:** switches between two modes:
-  - **click-through** (default): clicks pass through the pet;
-  - **interactive**: you can drag a pet, click it and open its menu.
-- **Size:** right-click the pet and pick **Size** (in interactive mode), or use **Settings → Pet size** for
-  all pets.
-- **Update only BApet:** `bapet-update`, then restart the app.
+Open it from the launcher, from the paw icon in the bar's tray drawer, or with
+`BlueArchiveDesktopPet --add "Hina"`. Left-clicking the paw starts the app, or opens Add Pet if it's
+already running. Right-clicking it shows the app's own menu (add, pause, hide, settings, quit) plus
+*Drag pets*.
+
+Pets start out click-through: clicks land on whatever is under them. Press `SUPER + ALT + P` (or pick
+*Drag pets*) to make them interactive so you can drag them, click them and open their menu. Press it
+again to go back.
+
+To resize one pet, right-click it in interactive mode and pick *Size*. *Settings → Pet size* changes
+all of them.
+
+`bapet-update` updates only BApet. Restart the app afterwards.
 
 ## Local tweaks
 
-The wrapper doesn't run `python -m bapet` directly. It goes through `overrides/bapet_omarchy.py`, which
-adjusts BApet in memory before starting it. No file in the clone is changed, so `git pull` never conflicts.
-If a new version changes something a tweak relies on, only that tweak is skipped (with a warning on stderr)
-and the app still opens.
+The wrapper starts BApet through `overrides/bapet_omarchy.py`, which patches a few functions in memory
+first. The clone itself is never edited, so `git pull` never conflicts. If an update changes one of the
+patched functions, that tweak is skipped with a warning and the app still opens.
 
 | Tweak | Upstream | Here |
 | --- | --- | --- |
@@ -62,15 +67,18 @@ The limits are constants at the top of the file. The outline change was also pro
 
 ## Why each piece exists
 
-- **The official binary isn't used:** the OpenBLAS bundled in the PyInstaller build is rejected by Arch's
-  glibc (`ELF load command address/offset not page-aligned`). Running from source avoids this.
-- **`QT_QPA_PLATFORM=xcb` in the wrapper:** the app needs XWayland to position its own windows. It switches
-  on its own, but only when the variable is unset, and Omarchy exports `wayland;xcb`.
-- **Click-through mode:** the app limits its clickable area with X11 SHAPE, but Hyprland ignores that. The
-  whole pet window would catch clicks, including the transparent area around the pet. So pets get
-  `no_focus` by default, and the `bapet-touch` tag (set by `bapet-ghost`) gives them the mouse back.
-- **The plugin reads the app's tray:** the widget uses the StatusNotifierItem BApet already publishes, so new
-  items in the app's menu show up on their own.
+The release binary doesn't start on Arch. The OpenBLAS bundled in the PyInstaller build is rejected by
+the newer glibc (`ELF load command address/offset not page-aligned`), so this runs BApet from source.
+
+The wrapper sets `QT_QPA_PLATFORM=xcb` because the app needs XWayland to place its own windows. BApet
+switches to it by itself only when the variable is unset, and Omarchy exports `wayland;xcb`.
+
+Click-through is a workaround. BApet limits its clickable area with X11 SHAPE, but Hyprland ignores it,
+so the whole pet window would catch clicks, transparent corners included. The rules give pets `no_focus`
+by default, and `bapet-ghost` adds a `bapet-touch` tag that hands them the mouse back.
+
+The bar plugin talks to BApet only through the tray item (StatusNotifierItem) the app already publishes.
+It draws that menu itself, so new menu items in BApet show up without changes here.
 
 ## Limitations
 

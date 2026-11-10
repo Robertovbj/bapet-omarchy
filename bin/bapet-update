@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atualiza o BApet: git pull no clone limpo + dependências do requirements.txt.
+# Updates BApet only: pulls the clean clone and installs its requirements.txt.
 set -euo pipefail
 BAPET_HOME="${BAPET_HOME:-$HOME/.local/share/bapet}"
 cd "$BAPET_HOME/src"
@@ -8,8 +8,8 @@ git pull --ff-only
 VIRTUAL_ENV="$BAPET_HOME/venv" uv pip install -q -r requirements.txt
 after=$(git rev-parse HEAD)
 if [ "$before" = "$after" ]; then
-  echo "BApet já está atualizado ($(git describe --tags --always))."
+  echo "BApet is up to date ($(git describe --tags --always))."
 else
   git log --oneline "$before..$after"
-  echo "Atualizado. Reinicie o app (Quit no menu da barra e abra de novo)."
+  echo "Updated. Restart the app (Quit from the bar menu, then open it again)."
 fi
