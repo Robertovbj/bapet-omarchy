@@ -1,78 +1,80 @@
 # bapet-omarchy
 
-Integração do [BApet (Blue Archive Desktop Pet)](https://github.com/kagdakj/BApet) com o
-[Omarchy](https://omarchy.org/) / Hyprland, sem modificar o código do BApet.
+Integrates [BApet (Blue Archive Desktop Pet)](https://github.com/kagdakj/BApet) with
+[Omarchy](https://omarchy.org/) / Hyprland, without modifying BApet's code.
 
 ```sh
-git clone <este repo> && cd bapet-omarchy
+git clone https://github.com/Robertovbj/bapet-omarchy && cd bapet-omarchy
 ./install.sh
 ```
 
-Para atualizar tudo depois, rode `./update.sh`. Ele faz `git pull` neste repo, roda o `install.sh` (que
-também atualiza o BApet) e reinicia o app se ele estiver aberto. Rodar `./install.sh` de novo também
-funciona, sem o pull e sem o reinício. `./install.sh --uninstall`
-remove tudo, mas mantém os pets, as settings e os modelos baixados.
+To update everything later, run `./update.sh`. It pulls this repo, runs `install.sh` (which also updates
+BApet) and restarts the app if it is open. Running `./install.sh` again also works, just without the pull
+and the restart. `./install.sh --uninstall` removes everything but keeps your pets, settings and downloaded
+models.
 
-## O que o instalador faz
+## What the installer does
 
-| Passo | Destino |
+| Step | Destination |
 | --- | --- |
-| Instala pacotes que faltam (`git jq libnotify mesa xcb-util-* libxkbcommon-x11`, e `uv` se não estiver no PATH) | via `omarchy pkg add` |
-| Clona o BApet sem modificações | `~/.local/share/bapet/src` |
-| Cria um venv com Python 3.12 e instala `requirements.txt` | `~/.local/share/bapet/venv` |
-| Ajustes locais aplicados em memória (veja abaixo) | `~/.local/share/bapet/overrides` |
-| Comandos `BlueArchiveDesktopPet`, `bapet-ghost`, `bapet-update` | `~/.local/bin/` |
-| Atalho e ícone no launcher | `~/.local/share/applications/`, `~/.local/share/icons/` |
-| Regras de janela e atalho de teclado | `~/.config/hypr/bapet.lua` + `require("hypr.bapet")` no `hyprland.lua` |
-| Plugin da barra (gaveta da bandeja) e esconde o ícone cru do app | `~/.config/omarchy/plugins/bapet.desktop-pets/`, `shell.json` |
+| Installs missing packages (`git jq libnotify mesa xcb-util-* libxkbcommon-x11`, plus `uv` if it is not on the PATH) | via `omarchy pkg add` |
+| Clones BApet, unmodified | `~/.local/share/bapet/src` |
+| Creates a Python 3.12 venv and installs `requirements.txt` | `~/.local/share/bapet/venv` |
+| Local tweaks applied in memory (see below) | `~/.local/share/bapet/overrides` |
+| `BlueArchiveDesktopPet`, `bapet-ghost` and `bapet-update` commands | `~/.local/bin/` |
+| Launcher entry and icon | `~/.local/share/applications/`, `~/.local/share/icons/` |
+| Window rules and keybinding | `~/.config/hypr/bapet.lua` + `require("hypr.bapet")` in `hyprland.lua` |
+| Bar plugin (in the tray drawer), hiding the app's raw tray icon | `~/.config/omarchy/plugins/bapet.desktop-pets/`, `shell.json` |
 
-Antes de editar `hyprland.lua` ou `shell.json`, o instalador cria um `.bak.<timestamp>`.
+Before editing `hyprland.lua` or `shell.json`, the installer saves a `.bak.<timestamp>` copy.
 
-Variáveis opcionais: `BAPET_REF=v1.0.0` fixa uma versão do BApet, `BAPET_REPO` aponta para um fork e
-`BAPET_HOME` muda a pasta de instalação.
+Optional variables: `BAPET_REF=v1.0.0` pins a BApet version, `BAPET_REPO` points to a fork, and
+`BAPET_HOME` changes the install folder.
 
-## Uso
+## Usage
 
-- **Abrir:** pelo launcher, pelo ícone de pata na bandeja da barra (clique esquerdo) ou com
+- **Open:** from the launcher, from the paw icon in the bar's tray drawer (left click), or with
   `BlueArchiveDesktopPet --add "Hina"`.
-- **Menu:** clique direito na pata da barra. Mostra o menu do próprio app (adicionar, pausar, esconder,
-  settings, sair) e a opção **Arrastar pets**.
-- **`SUPER + ALT + P`:** alterna entre dois modos:
-  - **atravessável** (padrão): cliques passam pelo pet;
-  - **interativo**: dá para arrastar, clicar e abrir o menu do pet.
-- **Tamanho:** clique direito no pet, em **Size**, no modo interativo; ou **Settings → Pet size**, para todos.
-- **Atualizar só o BApet:** `bapet-update`, depois reinicie o app.
+- **Menu:** right-click the paw in the bar. It shows the app's own menu (add, pause, hide, settings, quit)
+  plus a **Drag pets** option.
+- **`SUPER + ALT + P`:** switches between two modes:
+  - **click-through** (default): clicks pass through the pet;
+  - **interactive**: you can drag a pet, click it and open its menu.
+- **Size:** right-click the pet and pick **Size** (in interactive mode), or use **Settings → Pet size** for
+  all pets.
+- **Update only BApet:** `bapet-update`, then restart the app.
 
-## Ajustes locais
+## Local tweaks
 
-O wrapper não roda `python -m bapet` direto: ele usa `overrides/bapet_omarchy.py`, que ajusta o BApet em
-memória antes de iniciar. Nenhum arquivo do clone é alterado, então `git pull` nunca dá conflito. Se uma
-versão nova mudar algum ponto que o ajuste toca, só aquele ajuste é pulado (com aviso no stderr) e o app
-abre normalmente.
+The wrapper doesn't run `python -m bapet` directly. It goes through `overrides/bapet_omarchy.py`, which
+adjusts BApet in memory before starting it. No file in the clone is changed, so `git pull` never conflicts.
+If a new version changes something a tweak relies on, only that tweak is skipped (with a warning on stderr)
+and the app still opens.
 
-| Ajuste | Original | Aqui |
+| Tweak | Upstream | Here |
 | --- | --- | --- |
-| Ângulo da câmera (Settings) | -10° a 45° | -180° a 180° (passando de ±90° o pet fica de cabeça para baixo) |
-| Espessura do contorno (Settings) | 0.5 a 6 px, passo 0.25 | 0.1 a 6 px, passo 0.1 |
-| Enquadramento da janela | só certo de 0° a 90°, corta o pet fora disso | certo em qualquer ângulo |
+| Camera angle (Settings) | -10° to 45° | -180° to 180° (past ±90° the pet is upside down) |
+| Outline width (Settings) | 0.5 to 6 px, 0.25 steps | 0.1 to 6 px, 0.1 steps |
+| Window framing | only correct from 0° to 90°, clips the pet elsewhere | correct at any angle |
 
-Os limites ficam nas constantes do topo do arquivo.
+The limits are constants at the top of the file. The outline change was also proposed upstream in
+[kagdakj/BApet#1](https://github.com/kagdakj/BApet/pull/1).
 
-## Por que cada peça existe
+## Why each piece exists
 
-- **Binário oficial não é usado:** a OpenBLAS embutida no build PyInstaller é recusada pelo glibc do Arch
-  (`ELF load command address/offset not page-aligned`). Rodar do código-fonte evita isso.
-- **`QT_QPA_PLATFORM=xcb` no wrapper:** o app precisa do XWayland para posicionar as próprias janelas. Ele
-  troca sozinho, mas só quando a variável não existe, e o Omarchy exporta `wayland;xcb`.
-- **Modo atravessável:** o app recorta a área clicável com X11 SHAPE, mas o Hyprland não respeita esse
-  recorte. A janela inteira do pet pegaria cliques, inclusive a área transparente em volta. Por isso os pets
-  ficam com `no_focus` por padrão, e a tag `bapet-touch` (posta pelo `bapet-ghost`) libera o mouse.
-- **Plugin lê a bandeja do app:** o widget usa o StatusNotifierItem que o BApet já publica. Itens novos no
-  menu do app aparecem sozinhos.
+- **The official binary isn't used:** the OpenBLAS bundled in the PyInstaller build is rejected by Arch's
+  glibc (`ELF load command address/offset not page-aligned`). Running from source avoids this.
+- **`QT_QPA_PLATFORM=xcb` in the wrapper:** the app needs XWayland to position its own windows. It switches
+  on its own, but only when the variable is unset, and Omarchy exports `wayland;xcb`.
+- **Click-through mode:** the app limits its clickable area with X11 SHAPE, but Hyprland ignores that. The
+  whole pet window would catch clicks, including the transparent area around the pet. So pets get
+  `no_focus` by default, and the `bapet-touch` tag (set by `bapet-ghost`) gives them the mouse back.
+- **The plugin reads the app's tray:** the widget uses the StatusNotifierItem BApet already publishes, so new
+  items in the app's menu show up on their own.
 
-## Limitações
+## Limitations
 
-- Um pet adicionado com o modo interativo ligado chega atravessável. Aperte `SUPER+ALT+P` duas vezes.
-- Os pets sempre ficam por cima das janelas em tiling, porque no Hyprland janelas flutuantes ficam acima.
-  "Keep pets above other windows" não muda isso.
-- Se `SUPER+ALT+P` já estiver em uso, edite `hypr/bapet.lua`.
+- A pet added while interactive mode is on starts out click-through. Press `SUPER+ALT+P` twice.
+- Pets always stay above tiled windows, because Hyprland keeps floating windows on top. "Keep pets above
+  other windows" doesn't change this.
+- If `SUPER+ALT+P` is already taken, edit `hypr/bapet.lua`.
