@@ -5,7 +5,8 @@ stands alone: if a new BApet version changes something a tweak relies on, that
 tweak is skipped with a warning and the app still opens.
 
 Tweaks:
-- Camera angle: -180° to 180° (upstream allows -10° to 45°). Past ±90° the pet is upside down.
+- Camera angle: -180° to 180° (upstream allows -10° to 45°). Past ±90° the pet is
+  upside down, and it stands on its head instead of disappearing below the screen.
 - Outline width: down to 0.1 px, in 0.1 steps (upstream stops at 0.5).
 """
 
@@ -70,6 +71,48 @@ def _patch_frame() -> None:
     Frame.fit = staticmethod(fit)
 
 
+def _upside_down(settings) -> bool:
+    return math.cos(math.radians(settings.pitch_deg)) < 0
+
+
+def _patch_upside_down_bounds() -> None:
+    """Pet._bounds_for_anchor() keeps the pet's feet (the anchor) on screen and
+    assumes the body is above them; in walk mode the feet go on the bottom edge.
+    Upside down the body hangs below the feet, so it would be drawn under the
+    screen. Raise the ground by the part of the window below the anchor, so the
+    pet stands on its head. Pets already below the new ground snap back up."""
+    from PySide6.QtCore import QPointF
+
+    from bapet.pet import Pet
+
+    original_bounds = Pet._bounds_for_anchor
+    original_tick = Pet.tick
+
+    @functools.wraps(original_bounds)
+    def _bounds_for_anchor(self):
+        x0, x1, y0, y1 = original_bounds(self)
+        f = self._frame
+        if f is None or not _upside_down(self.controller.settings):
+            return x0, x1, y0, y1
+        area = self._screen_rect()
+        bottom = float(area.bottom()) - (f.height - f.anchor_y)
+        return x0, x1, min(area.top() + f.anchor_y, bottom), bottom
+
+    @functools.wraps(original_tick)
+    def tick(self, dt):
+        if (self.lm is not None and self._frame is not None and self.mode in ("idle", "walk")
+                and _upside_down(self.controller.settings)):
+            ground = self._bounds_for_anchor()[3]
+            if self.anchor.y() > ground + 1:
+                self.anchor = QPointF(self.anchor.x(), ground)
+                if self.mode == "walk":
+                    self.target = QPointF(self.target.x(), min(self.target.y(), ground))
+        return original_tick(self, dt)
+
+    Pet._bounds_for_anchor = _bounds_for_anchor
+    Pet.tick = tick
+
+
 def _patch_settings_dialog() -> None:
     """The Settings fields enforce the old limits. Widen them and set the saved
     value again, since the field already clamped it when it was created."""
@@ -93,7 +136,7 @@ def _patch_settings_dialog() -> None:
 
 
 def apply() -> None:
-    for patch in (_patch_sanitize, _patch_frame, _patch_settings_dialog):
+    for patch in (_patch_sanitize, _patch_frame, _patch_upside_down_bounds, _patch_settings_dialog):
         try:
             patch()
         except Exception as exc:  # noqa: BLE001 - a broken tweak must not keep the app from opening
