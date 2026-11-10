@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Wrapper local: roda o BApet a partir do clone em ~/.local/share/bapet/src (sem modificações).
+# Wrapper local: roda o BApet a partir do clone em ~/.local/share/bapet/src (sem modificações),
+# pelo lançador em ~/.local/share/bapet/overrides, que aplica os ajustes locais em memória.
 BAPET_HOME="${BAPET_HOME:-$HOME/.local/share/bapet}"
 
 # Wayland não deixa o app posicionar as próprias janelas e o Omarchy exporta
 # QT_QPA_PLATFORM="wayland;xcb", o que impede o app de trocar sozinho. Força XWayland.
 export QT_QPA_PLATFORM=xcb
+export PYTHONPATH="$BAPET_HOME/overrides:$BAPET_HOME/src${PYTHONPATH:+:$PYTHONPATH}"
 
 cd "$BAPET_HOME/src" || exit 1
-exec "$BAPET_HOME/venv/bin/python" -m bapet "$@"
+exec "$BAPET_HOME/venv/bin/python" -m bapet_omarchy "$@"

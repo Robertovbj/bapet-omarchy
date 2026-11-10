@@ -118,6 +118,10 @@ VIRTUAL_ENV="$BAPET_HOME/venv" uv pip install --quiet -r "$BAPET_HOME/src/requir
 
 # --------------------------------------------------------------------------- arquivos
 
+say "Instalando ajustes locais (ângulo da câmera, contorno)"
+mkdir -p "$BAPET_HOME/overrides"
+install -m 644 "$HERE/overrides/bapet_omarchy.py" "$BAPET_HOME/overrides/"
+
 say "Instalando comandos em $BIN_DIR"
 mkdir -p "$BIN_DIR"
 install -m 755 "$HERE/bin/BlueArchiveDesktopPet" "$HERE/bin/bapet-ghost" "$HERE/bin/bapet-update" "$BIN_DIR/"

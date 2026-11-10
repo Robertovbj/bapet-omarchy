@@ -8,7 +8,9 @@ git clone <este repo> && cd bapet-omarchy
 ./install.sh
 ```
 
-Rodar `./install.sh` de novo atualiza o BApet e reaplica a integração. `./install.sh --uninstall`
+Para atualizar tudo depois, rode `./update.sh`. Ele faz `git pull` neste repo, roda o `install.sh` (que
+também atualiza o BApet) e reinicia o app se ele estiver aberto. Rodar `./install.sh` de novo também
+funciona, sem o pull e sem o reinício. `./install.sh --uninstall`
 remove tudo, mas mantém os pets, as settings e os modelos baixados.
 
 ## O que o instalador faz
@@ -18,6 +20,7 @@ remove tudo, mas mantém os pets, as settings e os modelos baixados.
 | Instala pacotes que faltam (`git jq libnotify mesa xcb-util-* libxkbcommon-x11`, e `uv` se não estiver no PATH) | via `omarchy pkg add` |
 | Clona o BApet sem modificações | `~/.local/share/bapet/src` |
 | Cria um venv com Python 3.12 e instala `requirements.txt` | `~/.local/share/bapet/venv` |
+| Ajustes locais aplicados em memória (veja abaixo) | `~/.local/share/bapet/overrides` |
 | Comandos `BlueArchiveDesktopPet`, `bapet-ghost`, `bapet-update` | `~/.local/bin/` |
 | Atalho e ícone no launcher | `~/.local/share/applications/`, `~/.local/share/icons/` |
 | Regras de janela e atalho de teclado | `~/.config/hypr/bapet.lua` + `require("hypr.bapet")` no `hyprland.lua` |
@@ -39,6 +42,21 @@ Variáveis opcionais: `BAPET_REF=v1.0.0` fixa uma versão do BApet, `BAPET_REPO`
   - **interativo**: dá para arrastar, clicar e abrir o menu do pet.
 - **Tamanho:** clique direito no pet, em **Size**, no modo interativo; ou **Settings → Pet size**, para todos.
 - **Atualizar só o BApet:** `bapet-update`, depois reinicie o app.
+
+## Ajustes locais
+
+O wrapper não roda `python -m bapet` direto: ele usa `overrides/bapet_omarchy.py`, que ajusta o BApet em
+memória antes de iniciar. Nenhum arquivo do clone é alterado, então `git pull` nunca dá conflito. Se uma
+versão nova mudar algum ponto que o ajuste toca, só aquele ajuste é pulado (com aviso no stderr) e o app
+abre normalmente.
+
+| Ajuste | Original | Aqui |
+| --- | --- | --- |
+| Ângulo da câmera (Settings) | -10° a 45° | -180° a 180° (passando de ±90° o pet fica de cabeça para baixo) |
+| Espessura do contorno (Settings) | 0.5 a 6 px, passo 0.25 | 0.1 a 6 px, passo 0.1 |
+| Enquadramento da janela | só certo de 0° a 90°, corta o pet fora disso | certo em qualquer ângulo |
+
+Os limites ficam nas constantes do topo do arquivo.
 
 ## Por que cada peça existe
 
